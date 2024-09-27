@@ -1,11 +1,10 @@
 package com.example.moviestore.serviceLayer;
 
 import com.example.moviestore.dataAccessLayer.Director;
+import com.example.moviestore.dataAccessLayer.DirectorRepository;
 import com.example.moviestore.dataAccessLayer.Movie;
 import com.example.moviestore.dataAccessLayer.MovieRepository;
-import com.example.moviestore.dataMapperLayer.MovieRequestMapper;
 import com.example.moviestore.dataMapperLayer.MovieResponseMapper;
-import com.example.moviestore.presentationLayer.DirectorRequestDTO;
 import com.example.moviestore.presentationLayer.MovieRequestDTO;
 import com.example.moviestore.presentationLayer.MovieResponseDTO;
 import org.springframework.beans.BeanUtils;
@@ -19,19 +18,19 @@ import java.util.List;
 public class MovieServiceImpl implements MovieService {
     private final MovieRepository movieRepository;
     private final MovieResponseMapper movieResponseMapper;
-    private final MovieRequestMapper movieRequestMapper;
+    private final DirectorRepository directorRepository;
 
     @Autowired
-    public MovieServiceImpl(MovieRepository movieRepository, MovieResponseMapper movieResponseMapper, MovieRequestMapper movieRequestMapper) {
+    public MovieServiceImpl(MovieRepository movieRepository, MovieResponseMapper movieResponseMapper, DirectorRepository directorRepository) {
         this.movieRepository = movieRepository;
         this.movieResponseMapper = movieResponseMapper;
-        this.movieRequestMapper = movieRequestMapper;
+        this.directorRepository = directorRepository;
     }
 
 
     @Override
     public String deleteMovie(String movieId) {
-        String message = "";
+        String message;
         Movie movie = movieRepository.findMovieByMovieId(movieId);
         if (movie != null) {
             movieRepository.delete(movie);
@@ -46,10 +45,12 @@ public class MovieServiceImpl implements MovieService {
     public List<MovieResponseDTO> addMovies(List<MovieRequestDTO> movieRequestDTOs) {
         List<Movie> movies = new ArrayList<>();
         for (MovieRequestDTO m : movieRequestDTOs){
+            Director foundDirector = directorRepository.findDirectorByDirectorId(m.getDirectorId());
             Movie movie = new Movie();
             //convert movieRequestDTO to an Entity
             BeanUtils.copyProperties(m, movie);
             movie.setMovieId(m.getMovieId());
+            movie.setDirector(foundDirector);
             System.out.println(
                     movie.getId() + " " +
                             movie.getMovieId() + " " +
@@ -71,9 +72,11 @@ public class MovieServiceImpl implements MovieService {
 //        } else if (movieRepository.findMovieByMovieId(newMovieData.getMovieId()) != null){
 //            return null;
 //        }
+        Director foundDirector = directorRepository.findDirectorByDirectorId(newMovieData.getDirectorId());
         Movie movie = new Movie();
         BeanUtils.copyProperties(newMovieData, movie);
         movie.setMovieId(newMovieData.getMovieId());
+        movie.setDirector(foundDirector);
 
         System.out.println("====================");
         System.out.println(
@@ -96,11 +99,19 @@ public class MovieServiceImpl implements MovieService {
 
     @Override
     public MovieResponseDTO getMovieById(String movieId) {
-        return null;
+        Movie movie = movieRepository.findMovieByMovieId(movieId);
+        return movieResponseMapper.entityToResponseDTO(movie);
     }
 
     @Override
     public MovieResponseDTO updateMovie(String movieId, MovieRequestDTO updatedMovieData) {
-        return null;
+        Movie movie = this.movieRepository.findMovieByMovieId(movieId);
+        if (movie == null){
+            return null;
+        }
+        BeanUtils.copyProperties(updatedMovieData, movie);
+        movie.setMovieId(movieId);
+        this.movieRepository.save(movie);
+        return movieResponseMapper.entityToResponseDTO(movie);
     }
 }

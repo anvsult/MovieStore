@@ -28,11 +28,11 @@ public class DirectorServiceImpl implements DirectorService{
 
     @Override
     public DirectorResponseDTO addDirector(DirectorRequestDTO directorRequestDTO){
-        if (directorRequestDTO == null){
-            return null;
-        } else if (directorRepository.findDirectorByDirectorId(directorRequestDTO.getDirectorId()) != null){
-            return null;
-        }
+//        if (directorRequestDTO == null){
+//            return null;
+//        } else if (directorRepository.findDirectorByDirectorId(directorRequestDTO.getDirectorId()) != null){
+//            return null;
+//        }
         Director director = new Director();
         BeanUtils.copyProperties(directorRequestDTO, director);
         director.setDirectorId(directorRequestDTO.getDirectorId());
@@ -96,7 +96,7 @@ public class DirectorServiceImpl implements DirectorService{
 
     @Override
     public String deleteDirector(String directorId) {
-        String message = "";
+        String message;
         Director director = this.directorRepository.findDirectorByDirectorId(directorId);
         if (director == null){
             message = "Director with id: " + directorId + " not found in repository.";

@@ -1,8 +1,6 @@
 package com.example.moviestore.presentationLayer;
 
-import com.example.moviestore.dataAccessLayer.Movie;
 import com.example.moviestore.serviceLayer.MovieService;
-import org.mapstruct.Mapper;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -37,7 +35,7 @@ public class MovieController {
         return movieService.updateMovie(movieId, updatedMovieData);
     }
     @DeleteMapping("/delete-movie/{movieId}")
-    public String deleteMovie(String movieId) {
+    public String deleteMovie(@PathVariable String movieId) {
         return movieService.deleteMovie(movieId);
     }
 }
