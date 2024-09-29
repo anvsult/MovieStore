@@ -27,7 +27,6 @@ public class MovieServiceImpl implements MovieService {
         this.directorRepository = directorRepository;
     }
 
-
     @Override
     public String deleteMovie(String movieId) {
         String message;
