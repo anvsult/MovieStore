@@ -5,6 +5,7 @@ import com.example.moviestore.dataAccessLayer.Movie;
 import com.example.moviestore.dataMapperLayer.DirectorResponseMapper;
 import com.example.moviestore.presentationLayer.DirectorRequestDTO;
 import com.example.moviestore.presentationLayer.DirectorResponseDTO;
+import com.example.moviestore.utilities.NotFoundException;
 import org.springframework.beans.BeanUtils;
 import com.example.moviestore.dataAccessLayer.DirectorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,16 +29,15 @@ public class DirectorServiceImpl implements DirectorService{
 
     @Override
     public DirectorResponseDTO addDirector(DirectorRequestDTO directorRequestDTO){
-//        if (directorRequestDTO == null){
-//            return null;
-//        } else if (directorRepository.findDirectorByDirectorId(directorRequestDTO.getDirectorId()) != null){
-//            return null;
-//        }
+        if (directorRequestDTO == null){
+            throw new NotFoundException("Director data is required.");
+        } else if (directorRepository.findDirectorByDirectorId(directorRequestDTO.getDirectorId()) != null){
+            throw new NotFoundException("Director with id: " + directorRequestDTO.getDirectorId() + " already exists.");
+        }
         Director director = new Director();
         BeanUtils.copyProperties(directorRequestDTO, director);
         director.setDirectorId(directorRequestDTO.getDirectorId());
         System.out.println(
-                director.getId() + " " +
                 director.getDirectorId() + " " +
                 director.getName() + " " +
                 director.getDob() + " " +
@@ -57,7 +57,6 @@ public class DirectorServiceImpl implements DirectorService{
             BeanUtils.copyProperties(d, director);
             director.setDirectorId(d.getDirectorId());
             System.out.println(
-                    director.getId() + " " +
                     director.getDirectorId() + " " +
                     director.getName() + " " +
                     director.getDob() + " " +
@@ -86,7 +85,7 @@ public class DirectorServiceImpl implements DirectorService{
     public DirectorResponseDTO updateDirector(String directorId, DirectorRequestDTO updatedDirectorData) {
         Director director = this.directorRepository.findDirectorByDirectorId(directorId);
         if (director == null){
-            return null;
+            throw new NotFoundException("Director with id: " + directorId + " not found.");
         }
         BeanUtils.copyProperties(updatedDirectorData, director);
         director.setDirectorId(directorId);
@@ -99,7 +98,7 @@ public class DirectorServiceImpl implements DirectorService{
         String message;
         Director director = this.directorRepository.findDirectorByDirectorId(directorId);
         if (director == null){
-            message = "Director with id: " + directorId + " not found in repository.";
+            throw new NotFoundException("Director with id: " + directorId + " not found.");
         } else {
             for (Movie m : director.getMovies()){
                 movieService.deleteMovie(m.getMovieId());

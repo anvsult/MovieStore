@@ -7,6 +7,7 @@ import com.example.moviestore.dataAccessLayer.MovieRepository;
 import com.example.moviestore.dataMapperLayer.MovieResponseMapper;
 import com.example.moviestore.presentationLayer.MovieRequestDTO;
 import com.example.moviestore.presentationLayer.MovieResponseDTO;
+import com.example.moviestore.utilities.NotFoundException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,9 +35,9 @@ public class MovieServiceImpl implements MovieService {
         Movie movie = movieRepository.findMovieByMovieId(movieId);
         if (movie != null) {
             movieRepository.delete(movie);
-            message = "Movie with id " + movieId + " deleted successfully";
+            message = "Movie with id " + movieId + " deleted";
         } else {
-            message = "Movie with id " + movieId + " not found";
+            throw new NotFoundException("Movie with id " + movieId + " deleted successfully");
         }
         return message;
     }
@@ -52,12 +53,11 @@ public class MovieServiceImpl implements MovieService {
             movie.setMovieId(m.getMovieId());
             movie.setDirector(foundDirector);
             System.out.println(
-                    movie.getId() + " " +
-                            movie.getMovieId() + " " +
-                            movie.getTitle() + " " +
-//                            movie.getDirector().getId() + " " +
-                            movie.getReleaseYear() + " " +
-                            movie.getPosterURL());
+                movie.getMovieId() + " " +
+                movie.getTitle() + " " +
+                movie.getDirector().getDirectorId() + " " +
+                movie.getReleaseYear() + " " +
+                movie.getPosterURL());
             //save movie entity to database via repository
             this.movieRepository.save(movie);
             movies.add(movie);
@@ -67,11 +67,11 @@ public class MovieServiceImpl implements MovieService {
 
     @Override
     public MovieResponseDTO addMovie(MovieRequestDTO newMovieData) {
-//        if (newMovieData.getMovieId() == null){
-//            return null;
-//        } else if (movieRepository.findMovieByMovieId(newMovieData.getMovieId()) != null){
-//            return null;
-//        }
+        if (newMovieData.getMovieId() == null){
+            throw new NotFoundException("Movie id is required.");
+        } else if (movieRepository.findMovieByMovieId(newMovieData.getMovieId()) != null){
+            throw new NotFoundException("Movie with id: " + newMovieData.getMovieId() + " already exists.");
+        }
         Director foundDirector = directorRepository.findDirectorByDirectorId(newMovieData.getDirectorId());
         Movie movie = new Movie();
         BeanUtils.copyProperties(newMovieData, movie);
@@ -80,12 +80,11 @@ public class MovieServiceImpl implements MovieService {
 
         System.out.println("====================");
         System.out.println(
-                movie.getId() + " " +
-                movie.getMovieId() + " " +
-                movie.getTitle() + " " +
-                movie.getDirector() + " " +
-                movie.getReleaseYear() + " " +
-                movie.getPosterURL());
+            movie.getMovieId() + " " +
+            movie.getTitle() + " " +
+            movie.getDirector().getDirectorId() + " " +
+            movie.getReleaseYear() + " " +
+            movie.getPosterURL());
         System.out.println("====================");
         this.movieRepository.save(movie);
         return movieResponseMapper.entityToResponseDTO(movie);
@@ -107,7 +106,7 @@ public class MovieServiceImpl implements MovieService {
     public MovieResponseDTO updateMovie(String movieId, MovieRequestDTO updatedMovieData) {
         Movie movie = this.movieRepository.findMovieByMovieId(movieId);
         if (movie == null){
-            return null;
+            throw new NotFoundException("Movie with id: " + movieId + " not found.");
         }
         BeanUtils.copyProperties(updatedMovieData, movie);
         movie.setMovieId(movieId);
